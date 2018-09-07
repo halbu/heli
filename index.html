@@ -1,0 +1,22 @@
+<head>
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body style="background-color: #000; color: #fff; font-family: 'FONT_SPECTRUM'; text-align: center;">
+    <h4 style="font-size: 32px; padding-top: 5px;">
+        h e l i c o p t e r &nbsp; &nbsp; h e r o
+    </h4>
+    <div style="text-align: center; padding-top: 8px; padding-bottom: 8px">
+        <canvas id="myCanvas" style="width: 800px; height: 518px; text-align: center; border: 2px solid white;"></canvas>
+    </div>
+</body>
+
+<!-- canvas filter effects library - https://github.com/evanw/glfx.js -->
+<script src="assets/libs/glfx.js"></script>
+
+<!-- models -->
+<script src="built/build.js"></script>
+
+<script>
+    var heli = new HELI();
+    heli.init();
+</script>

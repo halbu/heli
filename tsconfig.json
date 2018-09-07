@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "outFile": "./built/build.js",
+        "allowJs": true,
+        "target": "es6",
+    },
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "include": [
+        "./src/models/world-object.ts", // force this one to load first :P
+        "./src/**/*",
+    ],
+    "*.json": {
+         "loader": "json"
+    },
+}
