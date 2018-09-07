@@ -74,6 +74,7 @@ class AssetManager {
         files.forEach(s => {
             let i = new Image();
             i.src = 'assets/sprites/' + s + '.png';
+            i.crossOrigin = 'anonymous';
             this.sprites[s] = i;
         });
     }
