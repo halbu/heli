@@ -669,7 +669,6 @@ class Person extends WorldObject {
             }
         }
         else if (this.state === BehaviourEnum.Hanging) {
-            console.log('this');
             this.sprites = ['person_hang'];
         }
     }
