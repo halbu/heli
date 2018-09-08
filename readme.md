@@ -1,12 +1,12 @@
 # heli
 
-game about helicopter rescue, very accurate simulation. written in typescript
+Game about helicopter rescue, very accurate simulation. written in TypeScript
 
-[play online here!](https://rawgit.com/halbu/heli/master/index.html)
+[play online here!](https://rawgit.com/halbu/heli/master/index.html) only works in Chrome right now I think.
 
 
 ## screenshot
 
 ![helicopter action](https://raw.githubusercontent.com/halbu/heli/master/assets/screenshots/screenshot.png)
 
-brave the erupting volcano and rescue the hapless civilians. beware flying rocks!
+Brave the erupting volcano and rescue the hapless civilians. beware flying rocks!
