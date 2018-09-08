@@ -2,7 +2,7 @@
 
 Game about helicopter rescue, very accurate simulation. written in TypeScript
 
-[play online here!](https://rawgit.com/halbu/heli/master/index.html) only works in Chrome right now I think.
+[play online here!](https://rawgit.com/halbu/heli/master/index.html)
 
 
 ## screenshot
