@@ -43,20 +43,25 @@ class LevelView implements IView {
             this.ctx.drawImage(AssetManager.getSprite('death'), 760, 4 + i * 20);
         }
         this.ctx.textAlign = 'center';
+        this.ctx.font = '' + 24 + "px '" + 'FONT_SPECTRUM' + "'";
         this.ctx.fillText(this.levelModel.timerstring, Constants.CANVAS_WIDTH / 2, 40);
         this.ctx.textAlign = 'left';
     }
 
     public drawPostgameOverlay(): void {
+        this.ctx.textAlign = 'center';
+
         // after one second draw the win/lose text
         if (this.postGameTimer > 60) {
-            this.ctx.textAlign = 'center';
-            this.ctx.fillText((this.levelModel.state === GameState.Victory ? 'TIME OVER' : 'CRASH AND BURN'), Constants.CANVAS_WIDTH / 2, 220);
-            this.ctx.textAlign = 'left';
+            this.ctx.font = '' + 36 + "px '" + 'FONT_SPECTRUM' + "'";
+            if (this.postGameTimer > 75 || this.postGameTimer % 4 <= 1) {
+                this.ctx.fillText((this.levelModel.state === GameState.Victory ? 'TIME OVER' : 'CRASH AND BURN'), Constants.CANVAS_WIDTH / 2, 180);
+            }
         }
 
         // after two seconds, start listing the player's rescues/deaths in order
         if (this.postGameTimer > 120) {
+            this.ctx.textAlign = 'start';
             // how many things should we draw at this point in time
             let fills = Math.floor((this.postGameTimer - 120) / Constants.LIST_OUTCOME_DELAY);
             if (fills >= this.levelModel.outcomes.length) { fills = this.levelModel.outcomes.length; }
@@ -70,7 +75,15 @@ class LevelView implements IView {
                 if (o === 'escaped') { sprite = 'saved'; }
                 if (o === 'killed_by_falling') { sprite = 'death'; }
                 if (o === 'killed_by_helipad') { sprite = 'death'; }
-                this.ctx.drawImage(AssetManager.getSprite(sprite), x + (i * Constants.OUTCOME_SPRITE_WIDTH), 280);
+                this.ctx.drawImage(AssetManager.getSprite(sprite), x + (i * Constants.OUTCOME_SPRITE_WIDTH), 240);
+            }
+        }
+
+        if (this.postGameTimer > 180) {
+            if (this.postGameTimer > 195 || this.postGameTimer % 4 <= 1) {
+                this.ctx.font = '' + 16 + "px '" + 'FONT_SPECTRUM' + "'";
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('PRESS ESCAPE TO RETURN TO MENU', Constants.CANVAS_WIDTH / 2, 350);
             }
         }
     }

@@ -988,18 +988,22 @@ class LevelView {
             this.ctx.drawImage(AssetManager.getSprite('death'), 760, 4 + i * 20);
         }
         this.ctx.textAlign = 'center';
+        this.ctx.font = '' + 24 + "px '" + 'FONT_SPECTRUM' + "'";
         this.ctx.fillText(this.levelModel.timerstring, Constants.CANVAS_WIDTH / 2, 40);
         this.ctx.textAlign = 'left';
     }
     drawPostgameOverlay() {
+        this.ctx.textAlign = 'center';
         // after one second draw the win/lose text
         if (this.postGameTimer > 60) {
-            this.ctx.textAlign = 'center';
-            this.ctx.fillText((this.levelModel.state === GameState.Victory ? 'TIME OVER' : 'CRASH AND BURN'), Constants.CANVAS_WIDTH / 2, 220);
-            this.ctx.textAlign = 'left';
+            this.ctx.font = '' + 36 + "px '" + 'FONT_SPECTRUM' + "'";
+            if (this.postGameTimer > 75 || this.postGameTimer % 4 <= 1) {
+                this.ctx.fillText((this.levelModel.state === GameState.Victory ? 'TIME OVER' : 'CRASH AND BURN'), Constants.CANVAS_WIDTH / 2, 180);
+            }
         }
         // after two seconds, start listing the player's rescues/deaths in order
         if (this.postGameTimer > 120) {
+            this.ctx.textAlign = 'start';
             // how many things should we draw at this point in time
             let fills = Math.floor((this.postGameTimer - 120) / Constants.LIST_OUTCOME_DELAY);
             if (fills >= this.levelModel.outcomes.length) {
@@ -1022,7 +1026,14 @@ class LevelView {
                 if (o === 'killed_by_helipad') {
                     sprite = 'death';
                 }
-                this.ctx.drawImage(AssetManager.getSprite(sprite), x + (i * Constants.OUTCOME_SPRITE_WIDTH), 280);
+                this.ctx.drawImage(AssetManager.getSprite(sprite), x + (i * Constants.OUTCOME_SPRITE_WIDTH), 240);
+            }
+        }
+        if (this.postGameTimer > 180) {
+            if (this.postGameTimer > 195 || this.postGameTimer % 4 <= 1) {
+                this.ctx.font = '' + 16 + "px '" + 'FONT_SPECTRUM' + "'";
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('PRESS ESCAPE TO RETURN TO MENU', Constants.CANVAS_WIDTH / 2, 350);
             }
         }
     }
@@ -1060,17 +1071,23 @@ class LevelView {
 }
 class MenuView {
     constructor(ctx) {
+        this.timer = 0;
         Object.assign(this, { ctx });
     }
     draw() {
+        this.timer++;
         this.ctx.fillStyle = Constants.COLORS.DRAW_COLOR;
         this.ctx.textAlign = 'center';
         this.ctx.font = '' + 48 + "px '" + 'FONT_SPECTRUM' + "'";
-        this.ctx.fillText('v o l c a n o', 400, 160);
-        this.ctx.fillText('h e l i c op t e r', 400, 200);
-        this.ctx.fillText('r e s c u e', 400, 240);
-        this.ctx.font = '' + 24 + "px '" + 'FONT_SPECTRUM' + "'";
-        this.ctx.fillText('/ press space /', 400, 300);
+        this.ctx.fillText('V O L C A N O', 400, 150);
+        this.ctx.fillText('H E L I C O P T E R', 400, 200);
+        this.ctx.fillText('R E S C U E', 400, 250);
+        if (this.timer > 60) {
+            if (this.timer > 75 || this.timer % 4 <= 1) {
+                this.ctx.font = '' + 24 + "px '" + 'FONT_SPECTRUM' + "'";
+                this.ctx.fillText('-  PRESS SPACE TO START -', 400, 350);
+            }
+        }
         this.ctx.textAlign = 'left';
     }
 }
