@@ -5,12 +5,11 @@ class Player extends WorldObject {
     public winchLength = 0;
     public winchState = WinchStateEnum.Retracting;
 
-    public hangers: Array<Person>;
+    public hanger: Person;
     public alive = true;
 
     constructor(x: number, y: number, levelModel: LevelModel) {
         super(levelModel, new Rect(x, y, 32, 16));
-        this.hangers = new Array<Person>();
         this.winch = new Rect(2, 2, 2, 2);
         this.repositionWinch();
     }
@@ -39,13 +38,11 @@ class Player extends WorldObject {
             d.vy += Math.random() * (this.vy / 2);
             this.levelModel.debris.push(d);
         }
-        for (let i = 0; i !== this.hangers.length; ++i) {
-            if (this.hangers[i]) {
-                this.hangers[i].startFalling(this.vx, this.vy);
-                this.levelModel.people.push(this.hangers[i]);
-                this.hangers.splice(i, 1);
-                i--;
-            }
+
+        if (this.hanger) {
+            this.hanger.startFalling(this.vx, this.vy);
+            this.levelModel.people.push(this.hanger);
+            this.hanger = null;
         }
     }
 
@@ -94,12 +91,10 @@ class Player extends WorldObject {
             }
         }
 
-        for (let i = 0; i !== this.hangers.length; ++i) {
-            if (this.hangers[i].hitbox.overlap(this.hitbox)) {
-                this.hangers[i].startFalling(this.vx, this.vy);
-                this.levelModel.switch(this.hangers, i, this.levelModel.people);
-                i--;
-            }
+        if (this.hanger && this.hanger.hitbox.overlap(this.hitbox)) {
+            this.hanger.startFalling(this.vx, this.vy);
+            this.levelModel.people.push(this.hanger);
+            this.hanger = null;
         }
 
         this.repositionWinch();
@@ -127,17 +122,16 @@ class Player extends WorldObject {
             this.winchLength -= (this.winch.bottomEdge() - Constants.GROUND_HEIGHT);
         }
         
-        if (this.hangers[0]) {
+        if (this.hanger) {
             if (this.winch.y + Constants.PERSON_HEIGHT > Constants.GROUND_HEIGHT) {
                 this.winch.y = Constants.GROUND_HEIGHT - Constants.PERSON_HEIGHT;
             }
         }
 
         // reposition the person hanging from the winch (if there is one)
-        for (let i = 0; i !== this.hangers.length; ++i) {
-            let p = this.hangers[i];
-            p.hitbox.x = this.winch.x - 3;
-            p.hitbox.y = this.winch.y + this.winch.h + 2;
+        if (this.hanger) {
+            this.hanger.hitbox.x = this.winch.x - 3;
+            this.hanger.hitbox.y = this.winch.y + this.winch.h + 2;
         }
     }
 

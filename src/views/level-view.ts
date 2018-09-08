@@ -18,7 +18,9 @@ class LevelView implements IView {
                 this.levelModel.player.winchLength);
             this.drawActor(this.levelModel.helper);
         }
-        this.drawActorArray(this.levelModel.player.hangers);
+        if (this.levelModel.player.hanger) {
+            this.drawActor(this.levelModel.player.hanger);
+        }
         this.drawActor(this.levelModel.volcano);
         this.drawActor(this.levelModel.helipad);
         this.drawActorArray(this.levelModel.people);

@@ -129,7 +129,7 @@ Constants.LEVEL_TIME = 60;
 Constants.OUTCOME_SPRITE_WIDTH = 30;
 Constants.LIST_OUTCOME_DELAY = 20;
 Constants.WINCH_Y_OFFSET = 12;
-Constants.PERSON_HEIGHT = 22;
+Constants.PERSON_HEIGHT = 18;
 Constants.COLORS = {
     DRAW_COLOR: '#ffffff',
     SCANLINE_COLOR: '#006000',
@@ -469,7 +469,9 @@ class LevelModel {
     allObjectsAct() {
         if (this.player.alive) {
             this.player.act();
-            this.player.hangers.forEach(h => h.act());
+            if (this.player.hanger) {
+                this.player.hanger.act();
+            }
             this.helper.act();
         }
         this.people.forEach(p => p.act());
@@ -504,27 +506,24 @@ class LevelModel {
                     this.player.die();
                 }
             }
-            for (let i = 0; i !== this.player.hangers.length; ++i) {
-                let p = this.player.hangers[i];
-                if (p.hitbox.overlap(m.hitbox)) {
-                    p.startFalling(this.player.vx, this.player.vy);
-                    this.switch(this.player.hangers, i, this.people);
-                    i--;
-                }
+            if (this.player.hanger && this.player.hanger.hitbox.overlap(m.hitbox)) {
+                this.player.hanger.startFalling(this.player.vx, this.player.vy);
+                this.people.push(this.player.hanger);
+                this.player.hanger = null;
             }
         });
         // test for hitting the winch on the helipad
         if (this.player.winchArea().overlap(this.helipad.hitbox)) {
-            for (let i = 0; i !== this.player.hangers.length; ++i) {
-                this.player.hangers[i].startFalling(this.player.vx, this.player.vy);
-                this.switch(this.player.hangers, i, this.people);
-                i--;
+            if (this.player.hanger) {
+                this.player.hanger.startFalling(this.player.vx, this.player.vy);
+                this.people.push(this.player.hanger);
+                this.player.hanger = null;
             }
             this.player.winchState = WinchStateEnum.Retracting;
         }
         // test for picking a person up
         for (let i = 0; i !== this.people.length; ++i) {
-            if (this.player.hangers.length > 0 || !this.player.alive) {
+            if (this.player.hanger || !this.player.alive) {
                 continue;
             }
             let p = this.people[i];
@@ -534,7 +533,8 @@ class LevelModel {
             // successful pickup
             if (this.player.winch.overlap(p.hitbox)) {
                 p.state = BehaviourEnum.Hanging;
-                this.switch(this.people, i, this.player.hangers);
+                this.player.hanger = p;
+                this.people.splice(i, 1);
                 i--;
                 // if this is the player's first pickup, show the helper indicating where to take them
                 if (this.firstPickup) {
@@ -544,20 +544,18 @@ class LevelModel {
             }
         }
         // person vs helipad
-        for (let i = 0; i !== this.player.hangers.length; ++i) {
-            let p = this.player.hangers[i];
-            if (p.hitbox.overlap(this.helipad.hitbox)) {
-                this.switch(this.player.hangers, i, this.people);
-                p.die();
-                i--;
+        if (this.player.hanger) {
+            if (this.player.hanger.hitbox.overlap(this.helipad.hitbox)) {
+                this.player.hanger.die();
+                this.player.hanger = null;
                 this.outcomes.push('killed_by_helipad');
             }
-            else if (p.hitbox.overlap(this.helipad.safetyBox)) {
-                p.state = BehaviourEnum.Leaving;
-                p.hitbox.y = this.helipad.safetyBox.bottomEdge() - p.hitbox.h;
-                this.switch(this.player.hangers, i, this.people);
+            else if (this.player.hanger.hitbox.overlap(this.helipad.safetyBox)) {
+                this.player.hanger.state = BehaviourEnum.Leaving;
+                this.player.hanger.hitbox.y = this.helipad.safetyBox.bottomEdge() - this.player.hanger.hitbox.h;
+                this.people.push(this.player.hanger);
+                this.player.hanger = null;
                 this.saves++;
-                i--;
                 this.outcomes.push('escaped');
             }
         }
@@ -709,7 +707,6 @@ class Player extends WorldObject {
         this.winchLength = 0;
         this.winchState = WinchStateEnum.Retracting;
         this.alive = true;
-        this.hangers = new Array();
         this.winch = new Rect(2, 2, 2, 2);
         this.repositionWinch();
     }
@@ -738,13 +735,10 @@ class Player extends WorldObject {
             d.vy += Math.random() * (this.vy / 2);
             this.levelModel.debris.push(d);
         }
-        for (let i = 0; i !== this.hangers.length; ++i) {
-            if (this.hangers[i]) {
-                this.hangers[i].startFalling(this.vx, this.vy);
-                this.levelModel.people.push(this.hangers[i]);
-                this.hangers.splice(i, 1);
-                i--;
-            }
+        if (this.hanger) {
+            this.hanger.startFalling(this.vx, this.vy);
+            this.levelModel.people.push(this.hanger);
+            this.hanger = null;
         }
     }
     act() {
@@ -788,12 +782,10 @@ class Player extends WorldObject {
                 this.levelModel.outcomes.push('killed_by_helicopter');
             }
         }
-        for (let i = 0; i !== this.hangers.length; ++i) {
-            if (this.hangers[i].hitbox.overlap(this.hitbox)) {
-                this.hangers[i].startFalling(this.vx, this.vy);
-                this.levelModel.switch(this.hangers, i, this.levelModel.people);
-                i--;
-            }
+        if (this.hanger && this.hanger.hitbox.overlap(this.hitbox)) {
+            this.hanger.startFalling(this.vx, this.vy);
+            this.levelModel.people.push(this.hanger);
+            this.hanger = null;
         }
         this.repositionWinch();
         if (this.vx > 0) {
@@ -821,16 +813,15 @@ class Player extends WorldObject {
         if (this.winch.bottomEdge() > Constants.GROUND_HEIGHT) {
             this.winchLength -= (this.winch.bottomEdge() - Constants.GROUND_HEIGHT);
         }
-        if (this.hangers[0]) {
+        if (this.hanger) {
             if (this.winch.y + Constants.PERSON_HEIGHT > Constants.GROUND_HEIGHT) {
                 this.winch.y = Constants.GROUND_HEIGHT - Constants.PERSON_HEIGHT;
             }
         }
         // reposition the person hanging from the winch (if there is one)
-        for (let i = 0; i !== this.hangers.length; ++i) {
-            let p = this.hangers[i];
-            p.hitbox.x = this.winch.x - 3;
-            p.hitbox.y = this.winch.y + this.winch.h + 2;
+        if (this.hanger) {
+            this.hanger.hitbox.x = this.winch.x - 3;
+            this.hanger.hitbox.y = this.winch.y + this.winch.h + 2;
         }
     }
     winchArea() {
@@ -967,7 +958,9 @@ class LevelView {
             this.ctx.fillRect(this.levelModel.player.winch.x, this.levelModel.player.hitbox.y + Constants.WINCH_Y_OFFSET, 2, this.levelModel.player.winchLength);
             this.drawActor(this.levelModel.helper);
         }
-        this.drawActorArray(this.levelModel.player.hangers);
+        if (this.levelModel.player.hanger) {
+            this.drawActor(this.levelModel.player.hanger);
+        }
         this.drawActor(this.levelModel.volcano);
         this.drawActor(this.levelModel.helipad);
         this.drawActorArray(this.levelModel.people);
