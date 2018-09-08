@@ -141,6 +141,14 @@ class Player extends WorldObject {
         }
     }
 
+    public winchArea(): Rect {
+        return new Rect(
+            this.hitbox.x + ((this.facing === DirEnum.Left) ? 12 : 24),
+            this.hitbox.y + Constants.WINCH_Y_OFFSET,
+            2,
+            this.winchLength);
+    }
+
     public calculateSprites(): void {
         this.lifetime++;
         this.sprites =

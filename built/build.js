@@ -479,7 +479,7 @@ class LevelModel {
         this.meteors = this.meteors.filter(p => p.alive);
         this.people = this.people.filter(p => p.alive);
         if (this.people.length < 3) {
-            this.people.push(new Person(830, Constants.GROUND_HEIGHT - 16, this));
+            this.people.push(new Person(Constants.CANVAS_WIDTH + 30, Constants.GROUND_HEIGHT - 16, this));
         }
     }
     checkHelpMessageTriggers() {
@@ -514,7 +514,7 @@ class LevelModel {
             }
         });
         // test for hitting the winch on the helipad
-        if (this.player.winch.overlap(this.helipad.hitbox)) {
+        if (this.player.winchArea().overlap(this.helipad.hitbox)) {
             for (let i = 0; i !== this.player.hangers.length; ++i) {
                 this.player.hangers[i].startFalling(this.player.vx, this.player.vy);
                 this.switch(this.player.hangers, i, this.people);
@@ -532,7 +532,7 @@ class LevelModel {
                 continue;
             }
             // successful pickup
-            if (this.overlap(this.player.winch, p.hitbox)) {
+            if (this.player.winch.overlap(p.hitbox)) {
                 p.state = BehaviourEnum.Hanging;
                 this.switch(this.people, i, this.player.hangers);
                 i--;
@@ -561,9 +561,6 @@ class LevelModel {
                 this.outcomes.push('escaped');
             }
         }
-    }
-    overlap(a, b) {
-        return (a.x + a.w > b.x && a.x < b.x + b.w && a.y + a.h > b.y && a.y < b.y + b.h);
     }
 }
 var GameState;
@@ -835,6 +832,9 @@ class Player extends WorldObject {
             p.hitbox.x = this.winch.x - 3;
             p.hitbox.y = this.winch.y + this.winch.h + 2;
         }
+    }
+    winchArea() {
+        return new Rect(this.hitbox.x + ((this.facing === DirEnum.Left) ? 12 : 24), this.hitbox.y + Constants.WINCH_Y_OFFSET, 2, this.winchLength);
     }
     calculateSprites() {
         this.lifetime++;
