@@ -24,7 +24,7 @@ class LevelController implements IController {
             this.levelModel.player.toggleWinch();
         }
 
-        if (!this.levelModel.player.alive && this.inputManager.KP === Constants.INPUT.Keys.Escape) {
+        if (this.inputManager.KP === Constants.INPUT.Keys.Escape && this.levelModel.state !== GameState.Playing) {
             this.heli.switchScreen(new MenuScreen(this.ctx, this.heli, this.inputManager));
         }
     }

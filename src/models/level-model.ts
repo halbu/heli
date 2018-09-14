@@ -22,7 +22,7 @@ class LevelModel {
     public outcomes: Array<string>;
 
     constructor() {
-        this.player = new Player(40, 135, this);
+        this.player = new Player(50, 135, this);
         this.player.facing = DirEnum.Right;
         this.meteors = new Array<Meteor>();
         this.people = new Array<Person>();
@@ -49,11 +49,6 @@ class LevelModel {
                 this.checkHelpMessageTriggers();
             }
         }
-    }
-
-    // move element i of array a into array b
-    public switch<T>(a: Array<T>, index: number, b: Array<T>): void {
-        b.push(a.splice(index, 1)[0]);
     }
 
     public advanceTime(): void {

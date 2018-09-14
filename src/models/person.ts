@@ -32,9 +32,9 @@ class Person extends WorldObject {
             }
 
             // hack to stop them walking too near the volcano or off the right side of the screen
-            if (this.hitbox.x < 440) {
+            if (this.hitbox.x < Constants.PERSON_LEFTMOST_WALK_POINT) {
                 this.facing = DirEnum.Right;
-            } else if (this.hitbox.x > 750) {
+            } else if (this.hitbox.x > Constants.PERSON_RIGHTMOST_WALK_POINT) {
                 this.facing = DirEnum.Left;
             }
 

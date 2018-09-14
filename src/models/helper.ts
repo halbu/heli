@@ -4,7 +4,6 @@ class Helper extends WorldObject {
 
     constructor(x: number, y: number, levelModel: LevelModel) {
         super(levelModel, new Rect(x, y, 100, 50));
-        // this.sprites = ['volcano'];
     }
 
     public act(): void {

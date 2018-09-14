@@ -36,7 +36,7 @@ class LevelController {
         if (this.inputManager.KP === Constants.INPUT.Keys.Space) {
             this.levelModel.player.toggleWinch();
         }
-        if (!this.levelModel.player.alive && this.inputManager.KP === Constants.INPUT.Keys.Escape) {
+        if (this.inputManager.KP === Constants.INPUT.Keys.Escape && this.levelModel.state !== GameState.Playing) {
             this.heli.switchScreen(new MenuScreen(this.ctx, this.heli, this.inputManager));
         }
     }
@@ -130,6 +130,8 @@ Constants.OUTCOME_SPRITE_WIDTH = 30;
 Constants.LIST_OUTCOME_DELAY = 20;
 Constants.WINCH_Y_OFFSET = 12;
 Constants.PERSON_HEIGHT = 18;
+Constants.PERSON_LEFTMOST_WALK_POINT = 440;
+Constants.PERSON_RIGHTMOST_WALK_POINT = 750;
 Constants.COLORS = {
     DRAW_COLOR: '#ffffff',
     SCANLINE_COLOR: '#006000',
@@ -350,7 +352,6 @@ class Helper extends WorldObject {
         super(levelModel, new Rect(x, y, 100, 50));
         this.lifetime = 0;
         this.state = HelperEnum.Steer;
-        // this.sprites = ['volcano'];
     }
     act() {
         if (this.state === HelperEnum.Steer) {
@@ -420,7 +421,7 @@ class LevelModel {
         this.firstPickup = true;
         this.inFlightWithoutWinch = true;
         this.state = GameState.Playing;
-        this.player = new Player(40, 135, this);
+        this.player = new Player(50, 135, this);
         this.player.facing = DirEnum.Right;
         this.meteors = new Array();
         this.people = new Array();
@@ -442,10 +443,6 @@ class LevelModel {
                 this.checkHelpMessageTriggers();
             }
         }
-    }
-    // move element i of array a into array b
-    switch(a, index, b) {
-        b.push(a.splice(index, 1)[0]);
     }
     advanceTime() {
         if (this.state === GameState.Playing || this.state === GameState.Dead) {
@@ -626,10 +623,10 @@ class Person extends WorldObject {
                 this.facing = (this.facing === DirEnum.Left) ? DirEnum.Right : DirEnum.Left;
             }
             // hack to stop them walking too near the volcano or off the right side of the screen
-            if (this.hitbox.x < 440) {
+            if (this.hitbox.x < Constants.PERSON_LEFTMOST_WALK_POINT) {
                 this.facing = DirEnum.Right;
             }
-            else if (this.hitbox.x > 750) {
+            else if (this.hitbox.x > Constants.PERSON_RIGHTMOST_WALK_POINT) {
                 this.facing = DirEnum.Left;
             }
             // move jerkily

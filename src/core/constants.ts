@@ -23,6 +23,8 @@ class Constants {
     public static readonly WINCH_Y_OFFSET = 12;
 
     public static readonly PERSON_HEIGHT = 18;
+    public static readonly PERSON_LEFTMOST_WALK_POINT = 440;
+    public static readonly PERSON_RIGHTMOST_WALK_POINT = 750;
 
     public static readonly COLORS = {
         DRAW_COLOR: '#ffffff',
