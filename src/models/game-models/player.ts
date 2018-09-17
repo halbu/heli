@@ -30,6 +30,7 @@ class Player extends WorldObject {
         // TODO: surely we don't need to effectively say the same thing here twice
         this.alive = false;
         this.levelModel.state = GameState.Dead;
+        this.levelModel.processGameEnd();
 
         for (let i = 0; i !== 25; ++i) {
             let p = this.hitbox.randomPointWithin();
@@ -80,7 +81,7 @@ class Player extends WorldObject {
             }
         }
 
-        if (this.hitbox.x < 0 || this.hitbox.x + this.hitbox.w > 800) {
+        if (this.hitbox.x < 0 || this.hitbox.x + this.hitbox.w > Constants.CANVAS_WIDTH) {
             this.die();
         }
 

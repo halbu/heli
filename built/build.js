@@ -322,98 +322,19 @@ class InputManager {
         this.KP = Constants.INPUT.None;
     }
 }
-class Debris extends WorldObject {
-    constructor(x, y, levelModel) {
-        super(levelModel, new Rect(x, y, 2, 2));
-        this.sprites = ['debris'];
-        this.vy = (Math.random() * 6) - 4;
-        this.vx = (Math.random() * 8) - 4;
+class PersistenceManager {
+    static store(key, value) {
+        localStorage.setItem(key, value);
     }
-    act() {
-        this.hitbox.x += this.vx;
-        this.hitbox.y += this.vy;
-        if (this.hitbox.y > Constants.GROUND_HEIGHT) {
-            this.hitbox.y = Constants.GROUND_HEIGHT - Math.abs(this.hitbox.y - Constants.GROUND_HEIGHT);
-            this.vy = -this.vy * 0.8;
-        }
-        this.vy += Constants.GRAVITY;
-        this.vx *= 0.9975;
+    static retrieve(key) {
+        return localStorage.getItem(key);
     }
 }
-class Helipad extends WorldObject {
-    constructor(x, y, levelModel) {
-        super(levelModel, new Rect(x, y, 96, 8));
-        this.safetyBox = new Rect(this.hitbox.x, this.hitbox.y - 10, this.hitbox.w, 8);
-        this.sprites = ['helipad'];
-    }
-}
-class Helper extends WorldObject {
-    constructor(x, y, levelModel) {
-        super(levelModel, new Rect(x, y, 100, 50));
-        this.lifetime = 0;
-        this.state = HelperEnum.Steer;
-    }
-    act() {
-        if (this.state === HelperEnum.Steer) {
-            this.hitbox.x = this.levelModel.player.hitbox.x - ((this.hitbox.w - this.levelModel.player.hitbox.w) / 2);
-            this.hitbox.y = this.levelModel.player.hitbox.y - 32;
-        }
-        else if (this.state === HelperEnum.Winch) {
-            this.hitbox.x = this.levelModel.player.hitbox.x - ((this.hitbox.w - this.levelModel.player.hitbox.w) / 2);
-            this.hitbox.y = this.levelModel.player.hitbox.y;
-        }
-        else if (this.state === HelperEnum.Rescue) {
-            this.hitbox.x = this.levelModel.helipad.hitbox.x + 16;
-            this.hitbox.y = this.levelModel.helipad.hitbox.y - 32;
-        }
-        this.calculateSprites();
-    }
-    switchMessage(newState) {
-        this.lifetime = 0;
-        this.state = newState;
-    }
-    calculateSprites() {
-        if (!this.levelModel.player.alive) {
-            this.sprites = [];
-        }
-        this.lifetime++;
-        if (this.lifetime < 240 && this.lifetime % 20 < 12) {
-            if (this.state === HelperEnum.Steer) {
-                this.sprites = ['help1'];
-            }
-            if (this.state === HelperEnum.Rescue) {
-                this.sprites = ['help2'];
-            }
-            if (this.state === HelperEnum.Winch) {
-                this.sprites = ['help3'];
-            }
-            if (this.state === HelperEnum.None) {
-                this.sprites = [];
-            }
-        }
-        else {
-            this.sprites = [];
-        }
-        if (this.state === HelperEnum.Steer) {
-            this.angle = this.levelModel.player.angle;
-        }
-        else {
-            this.angle = 0;
-        }
-    }
-}
-var HelperEnum;
-(function (HelperEnum) {
-    HelperEnum[HelperEnum["Steer"] = 1] = "Steer";
-    HelperEnum[HelperEnum["Rescue"] = 2] = "Rescue";
-    HelperEnum[HelperEnum["Winch"] = 3] = "Winch";
-    HelperEnum[HelperEnum["None"] = 4] = "None";
-})(HelperEnum || (HelperEnum = {}));
 class LevelModel {
     constructor() {
         this.w = Constants.CANVAS_WIDTH;
         this.h = Constants.CANVAS_HEIGHT;
-        this.deaths = 0;
+        this.kills = 0;
         this.saves = 0;
         this.timer = Constants.LEVEL_TIME;
         this.ms = 60;
@@ -444,6 +365,20 @@ class LevelModel {
             }
         }
     }
+    processGameEnd() {
+        let mostHeroic = JSON.parse(PersistenceManager.retrieve('hiScoreMostHeroic'));
+        if (this.saves > mostHeroic.saves) {
+            PersistenceManager.store('hiScoreMostHeroic', JSON.stringify({ saves: this.saves, kills: this.kills }));
+        }
+        let mostMurderous = JSON.parse(PersistenceManager.retrieve('hiScoreMostMurderous'));
+        if (this.kills > mostMurderous.kills) {
+            PersistenceManager.store('hiScoreMostMurderous', JSON.stringify({ saves: this.saves, kills: this.kills }));
+        }
+        let bestOverall = JSON.parse(PersistenceManager.retrieve('hiScoreBestOverall'));
+        if ((this.saves - this.kills) > (bestOverall.saves - bestOverall.kills)) {
+            PersistenceManager.store('hiScoreBestOverall', JSON.stringify({ saves: this.saves, kills: this.kills }));
+        }
+    }
     advanceTime() {
         if (this.state === GameState.Playing || this.state === GameState.Dead) {
             if (this.state === GameState.Dead) {
@@ -452,7 +387,10 @@ class LevelModel {
             if (this.ms++ > 60) {
                 if (this.timer === 0) {
                     this.ms = 60;
-                    this.state = GameState.Victory;
+                    if (this.state === GameState.Playing) {
+                        this.processGameEnd();
+                        this.state = GameState.Victory;
+                    }
                 }
                 else {
                     this.ms = 0;
@@ -564,6 +502,110 @@ var GameState;
     GameState[GameState["Dead"] = 2] = "Dead";
     GameState[GameState["Victory"] = 3] = "Victory";
 })(GameState || (GameState = {}));
+class MenuModel {
+    constructor() {
+        if (!PersistenceManager.retrieve('hiScoreMostHeroic')) {
+            PersistenceManager.store('hiScoreMostHeroic', JSON.stringify({ saves: 0, kills: 0 }));
+        }
+        if (!PersistenceManager.retrieve('hiScoreMostMurderous')) {
+            PersistenceManager.store('hiScoreMostMurderous', JSON.stringify({ saves: 0, kills: 0 }));
+        }
+        if (!PersistenceManager.retrieve('hiScoreBestOverall')) {
+            PersistenceManager.store('hiScoreBestOverall', JSON.stringify({ saves: 0, kills: 0 }));
+        }
+        this.hiScoreMostHeroic = JSON.parse(PersistenceManager.retrieve('hiScoreMostHeroic'));
+        this.hiScoreMostMurderous = JSON.parse(PersistenceManager.retrieve('hiScoreMostMurderous'));
+        this.hiScoreBestOverall = JSON.parse(PersistenceManager.retrieve('hiScoreBestOverall'));
+    }
+    act() { }
+}
+class Debris extends WorldObject {
+    constructor(x, y, levelModel) {
+        super(levelModel, new Rect(x, y, 2, 2));
+        this.sprites = ['debris'];
+        this.vy = (Math.random() * 6) - 4;
+        this.vx = (Math.random() * 8) - 4;
+    }
+    act() {
+        this.hitbox.x += this.vx;
+        this.hitbox.y += this.vy;
+        if (this.hitbox.y > Constants.GROUND_HEIGHT) {
+            this.hitbox.y = Constants.GROUND_HEIGHT - Math.abs(this.hitbox.y - Constants.GROUND_HEIGHT);
+            this.vy = -this.vy * 0.8;
+        }
+        this.vy += Constants.GRAVITY;
+        this.vx *= 0.9975;
+    }
+}
+class Helipad extends WorldObject {
+    constructor(x, y, levelModel) {
+        super(levelModel, new Rect(x, y, 96, 8));
+        this.safetyBox = new Rect(this.hitbox.x, this.hitbox.y - 10, this.hitbox.w, 8);
+        this.sprites = ['helipad'];
+    }
+}
+class Helper extends WorldObject {
+    constructor(x, y, levelModel) {
+        super(levelModel, new Rect(x, y, 100, 50));
+        this.lifetime = 0;
+        this.state = HelperEnum.Steer;
+    }
+    act() {
+        if (this.state === HelperEnum.Steer) {
+            this.hitbox.x = this.levelModel.player.hitbox.x - ((this.hitbox.w - this.levelModel.player.hitbox.w) / 2);
+            this.hitbox.y = this.levelModel.player.hitbox.y - 32;
+        }
+        else if (this.state === HelperEnum.Winch) {
+            this.hitbox.x = this.levelModel.player.hitbox.x - ((this.hitbox.w - this.levelModel.player.hitbox.w) / 2);
+            this.hitbox.y = this.levelModel.player.hitbox.y;
+        }
+        else if (this.state === HelperEnum.Rescue) {
+            this.hitbox.x = this.levelModel.helipad.hitbox.x + 16;
+            this.hitbox.y = this.levelModel.helipad.hitbox.y - 32;
+        }
+        this.calculateSprites();
+    }
+    switchMessage(newState) {
+        this.lifetime = 0;
+        this.state = newState;
+    }
+    calculateSprites() {
+        if (!this.levelModel.player.alive) {
+            this.sprites = [];
+        }
+        this.lifetime++;
+        if (this.lifetime < 240 && this.lifetime % 20 < 12) {
+            if (this.state === HelperEnum.Steer) {
+                this.sprites = ['help1'];
+            }
+            if (this.state === HelperEnum.Rescue) {
+                this.sprites = ['help2'];
+            }
+            if (this.state === HelperEnum.Winch) {
+                this.sprites = ['help3'];
+            }
+            if (this.state === HelperEnum.None) {
+                this.sprites = [];
+            }
+        }
+        else {
+            this.sprites = [];
+        }
+        if (this.state === HelperEnum.Steer) {
+            this.angle = this.levelModel.player.angle;
+        }
+        else {
+            this.angle = 0;
+        }
+    }
+}
+var HelperEnum;
+(function (HelperEnum) {
+    HelperEnum[HelperEnum["Steer"] = 1] = "Steer";
+    HelperEnum[HelperEnum["Rescue"] = 2] = "Rescue";
+    HelperEnum[HelperEnum["Winch"] = 3] = "Winch";
+    HelperEnum[HelperEnum["None"] = 4] = "None";
+})(HelperEnum || (HelperEnum = {}));
 class Meteor extends WorldObject {
     constructor(x, y, levelModel) {
         super(levelModel, new Rect(x, y, 8, 8));
@@ -679,7 +721,7 @@ class Person extends WorldObject {
             return;
         } // don't die twice
         this.alive = false;
-        this.levelModel.deaths++;
+        this.levelModel.kills++;
         for (let i = 0; i !== 25; ++i) {
             let p = this.hitbox.randomPointWithin();
             let d = new Debris(p.x, p.y, this.levelModel);
@@ -724,6 +766,7 @@ class Player extends WorldObject {
         // TODO: surely we don't need to effectively say the same thing here twice
         this.alive = false;
         this.levelModel.state = GameState.Dead;
+        this.levelModel.processGameEnd();
         for (let i = 0; i !== 25; ++i) {
             let p = this.hitbox.randomPointWithin();
             let d = new Debris(p.x, p.y, this.levelModel);
@@ -769,7 +812,7 @@ class Player extends WorldObject {
                 this.hitbox = testHitbox;
             }
         }
-        if (this.hitbox.x < 0 || this.hitbox.x + this.hitbox.w > 800) {
+        if (this.hitbox.x < 0 || this.hitbox.x + this.hitbox.w > Constants.CANVAS_WIDTH) {
             this.die();
         }
         for (let i = 0; i !== this.levelModel.people.length; ++i) {
@@ -932,13 +975,13 @@ class LevelScreen {
 class MenuScreen {
     constructor(ctx, heli, inputManager) {
         Object.assign(this, { ctx, heli });
-        this.model = null;
-        this.view = new MenuView(ctx);
+        this.model = new MenuModel();
+        this.view = new MenuView(ctx, this.model);
         this.controller = new MenuController(inputManager, heli, ctx);
     }
     act() {
         this.controller.handleInput();
-        // this.model.act();
+        this.model.act();
         this.view.draw();
     }
 }
@@ -973,7 +1016,7 @@ class LevelView {
         for (let i = 0; i !== this.levelModel.saves; ++i) {
             this.ctx.drawImage(AssetManager.getSprite('saved'), 780, 4 + i * 20);
         }
-        for (let i = 0; i !== this.levelModel.deaths; ++i) {
+        for (let i = 0; i !== this.levelModel.kills; ++i) {
             this.ctx.drawImage(AssetManager.getSprite('death'), 760, 4 + i * 20);
         }
         this.ctx.textAlign = 'center';
@@ -990,7 +1033,7 @@ class LevelView {
                 this.ctx.fillText((this.levelModel.state === GameState.Victory ? 'TIME OVER' : 'CRASH AND BURN'), Constants.CANVAS_WIDTH / 2, 180);
             }
         }
-        // after two seconds, start listing the player's rescues/deaths in order
+        // after two seconds, start listing the player's rescues/kills in order
         if (this.postGameTimer > 120) {
             this.ctx.textAlign = 'start';
             // how many things should we draw at this point in time
@@ -1059,24 +1102,29 @@ class LevelView {
     }
 }
 class MenuView {
-    constructor(ctx) {
+    constructor(ctx, menuModel) {
         this.timer = 0;
-        Object.assign(this, { ctx });
+        Object.assign(this, { ctx, menuModel });
     }
     draw() {
         this.timer++;
         this.ctx.fillStyle = Constants.COLORS.DRAW_COLOR;
         this.ctx.textAlign = 'center';
         this.ctx.font = '' + 48 + "px '" + 'FONT_SPECTRUM' + "'";
-        this.ctx.fillText('V O L C A N O', 400, 150);
-        this.ctx.fillText('H E L I C O P T E R', 400, 200);
-        this.ctx.fillText('R E S C U E', 400, 250);
+        this.ctx.fillText('V O L C A N O', 400, 100);
+        this.ctx.fillText('H E L I C O P T E R', 400, 150);
+        this.ctx.fillText('R E S C U E', 400, 200);
         if (this.timer > 60) {
             if (this.timer > 75 || this.timer % 4 <= 1) {
                 this.ctx.font = '' + 24 + "px '" + 'FONT_SPECTRUM' + "'";
-                this.ctx.fillText('-  PRESS SPACE TO START -', 400, 350);
+                this.ctx.fillText('-  PRESS SPACE TO START -', 400, 320);
             }
         }
+        this.ctx.font = '' + 12 + "px '" + 'FONT_SPECTRUM' + "'";
+        this.ctx.fillText('**  HIGH SCORES  **', 400, 430);
+        this.ctx.fillText('Most Heroic Game: +' + this.menuModel.hiScoreMostHeroic.saves + ' -' + this.menuModel.hiScoreMostHeroic.kills, 400, 460);
+        this.ctx.fillText('Most Murderous Game: +' + this.menuModel.hiScoreMostMurderous.saves + ' -' + this.menuModel.hiScoreMostMurderous.kills, 400, 475);
+        this.ctx.fillText('Best Overall Game: +' + this.menuModel.hiScoreBestOverall.saves + ' -' + this.menuModel.hiScoreBestOverall.kills, 400, 490);
         this.ctx.textAlign = 'left';
     }
 }

@@ -1,4 +1,4 @@
-class LevelModel {
+class LevelModel implements IModel {
     public w = Constants.CANVAS_WIDTH;
     public h = Constants.CANVAS_HEIGHT;
     
@@ -10,7 +10,7 @@ class LevelModel {
     public helper: Helper;
     public debris: Array<Debris>;
 
-    public deaths = 0;
+    public kills = 0;
     public saves = 0;
     public timer = Constants.LEVEL_TIME;
     public ms = 60;
@@ -51,13 +51,33 @@ class LevelModel {
         }
     }
 
+    public processGameEnd(): void {
+        let mostHeroic = JSON.parse(PersistenceManager.retrieve('hiScoreMostHeroic'));
+        if (this.saves > mostHeroic.saves) {
+            PersistenceManager.store('hiScoreMostHeroic', JSON.stringify({saves: this.saves, kills: this.kills}));
+        }
+        
+        let mostMurderous = JSON.parse(PersistenceManager.retrieve('hiScoreMostMurderous'));
+        if (this.kills > mostMurderous.kills) {
+            PersistenceManager.store('hiScoreMostMurderous', JSON.stringify({saves: this.saves, kills: this.kills}));
+        }
+        
+        let bestOverall = JSON.parse(PersistenceManager.retrieve('hiScoreBestOverall'));
+        if ((this.saves - this.kills) > (bestOverall.saves - bestOverall.kills)) {
+            PersistenceManager.store('hiScoreBestOverall', JSON.stringify({saves: this.saves, kills: this.kills}));
+        }
+    }
+
     public advanceTime(): void {
         if (this.state === GameState.Playing || this.state === GameState.Dead) {
             if (this.state === GameState.Dead) { return; }
             if (this.ms++ > 60) {
                 if (this.timer === 0) {
                     this.ms = 60;
-                    this.state = GameState.Victory;
+                    if (this.state === GameState.Playing) {
+                        this.processGameEnd();
+                        this.state = GameState.Victory;
+                    }
                 } else {
                     this.ms = 0;
                     this.timer = Math.max(0, --this.timer);

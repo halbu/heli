@@ -41,7 +41,7 @@ class LevelView implements IView {
         for (let i = 0; i !== this.levelModel.saves; ++i) {
             this.ctx.drawImage(AssetManager.getSprite('saved'), 780, 4 + i * 20);
         }
-        for (let i = 0; i !== this.levelModel.deaths; ++i) {
+        for (let i = 0; i !== this.levelModel.kills; ++i) {
             this.ctx.drawImage(AssetManager.getSprite('death'), 760, 4 + i * 20);
         }
         this.ctx.textAlign = 'center';
@@ -61,7 +61,7 @@ class LevelView implements IView {
             }
         }
 
-        // after two seconds, start listing the player's rescues/deaths in order
+        // after two seconds, start listing the player's rescues/kills in order
         if (this.postGameTimer > 120) {
             this.ctx.textAlign = 'start';
             // how many things should we draw at this point in time

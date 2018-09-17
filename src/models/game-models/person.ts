@@ -90,7 +90,7 @@ class Person extends WorldObject {
     public die(): void {
         if (!this.alive) { return; } // don't die twice
         this.alive = false;
-        this.levelModel.deaths++;
+        this.levelModel.kills++;
         for (let i = 0; i !== 25; ++i) {
             let p = this.hitbox.randomPointWithin();
             let d = new Debris(p.x, p.y, this.levelModel);

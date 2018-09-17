@@ -7,10 +7,10 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "include": [
-        "./src/models/world-object.ts", // force this one to load first :P
+        "./src/models/game-models/world-object.ts", // force this one to load first :P
         "./src/**/*",
     ],
     "*.json": {
-         "loader": "json"
+        "loader": "json"
     },
 }
