@@ -26,6 +26,8 @@ class Constants {
     public static readonly PERSON_LEFTMOST_WALK_POINT = 440;
     public static readonly PERSON_RIGHTMOST_WALK_POINT = 750;
 
+    public static readonly MILLISECONDS_PER_FRAME = 17; // close enough
+
     public static readonly COLORS = {
         DRAW_COLOR: '#ffffff',
         SCANLINE_COLOR: '#006000',

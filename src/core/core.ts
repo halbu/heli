@@ -6,6 +6,8 @@ class HELI {
     public ctx: CanvasRenderingContext2D;
 
     public lastFrameTime: number;
+    public deltaTime: number;
+
     public inputManager: InputManager;
     public scanlineOffset = 0;
     public activeScreen: IAppScreen;
@@ -73,7 +75,13 @@ class HELI {
         this.overdrawScanlines();
         this.applyGlfx();
 
-        this.awaitNextFrame();
+        this.deltaTime = performance.now() - this.lastFrameTime;
+        while (this.deltaTime < Constants.MILLISECONDS_PER_FRAME) {
+            this.deltaTime = performance.now() - this.lastFrameTime;
+        }
+
+        this.lastFrameTime = performance.now();
+        window.requestAnimationFrame(() => {this.coreGameLoop(); });
     }
 
     public applyGlfx(): void {
@@ -112,9 +120,5 @@ class HELI {
 
     public coinflip(): boolean {
         return this.oneIn(2);
-    }
-
-    public awaitNextFrame(): void {
-        window.requestAnimationFrame(() => { this.coreGameLoop(); });
     }
 }

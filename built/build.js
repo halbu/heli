@@ -132,6 +132,7 @@ Constants.WINCH_Y_OFFSET = 12;
 Constants.PERSON_HEIGHT = 18;
 Constants.PERSON_LEFTMOST_WALK_POINT = 440;
 Constants.PERSON_RIGHTMOST_WALK_POINT = 750;
+Constants.MILLISECONDS_PER_FRAME = 17; // close enough
 Constants.COLORS = {
     DRAW_COLOR: '#ffffff',
     SCANLINE_COLOR: '#006000',
@@ -249,7 +250,12 @@ class HELI {
         this.inputManager.clearInput();
         this.overdrawScanlines();
         this.applyGlfx();
-        this.awaitNextFrame();
+        this.deltaTime = performance.now() - this.lastFrameTime;
+        while (this.deltaTime < Constants.MILLISECONDS_PER_FRAME) {
+            this.deltaTime = performance.now() - this.lastFrameTime;
+        }
+        this.lastFrameTime = performance.now();
+        window.requestAnimationFrame(() => { this.coreGameLoop(); });
     }
     applyGlfx() {
         // Load the latest glfxSourceCanvas frame
@@ -284,9 +290,6 @@ class HELI {
     }
     coinflip() {
         return this.oneIn(2);
-    }
-    awaitNextFrame() {
-        window.requestAnimationFrame(() => { this.coreGameLoop(); });
     }
 }
 class InputManager {
